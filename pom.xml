@@ -1,0 +1,148 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>jni-memory-test</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    
+    <name>jni-memory-test</name>
+    <description>JNI project demonstrating memory allocation from multiple threads</description>
+
+    <properties>
+        <!-- Set the encoding and Java version -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <!-- Define the output directory for the compiled native library -->
+        <native.output.dir>${project.build.directory}</native.output.dir>
+        <jdk.home>/Library/Java/JavaVirtualMachines/temurin-17-aarch.jdk/Contents/Home</jdk.home>
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- Compiler plugin for Java code -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+
+            <!-- Exec plugin to compile the JNI C code -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>compile-native-code</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Adjust the working directory if needed -->
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <executable>gcc</executable>
+                            <arguments>
+                                <!-- Compile shared library (-shared, -fPIC) -->
+                                <argument>-shared</argument>
+                                <argument>-fPIC</argument>
+                                <!-- Output file -->
+                                <argument>-o</argument>
+                                <argument>${native.output.dir}/libmemory${native.extension}</argument>
+                                <!-- Include directories: Java include and platform-specific include -->
+                                <argument>-I${java.home}/include</argument>
+                                <argument>-I${java.home}/include/${os.include.dir.name}</argument>
+                                <!-- Source file -->
+                                <argument>src/main/c/com_example_jnimemory_MemoryTestNative.c</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Include the compiled library in the JAR -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.6</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <instructions>
+                        <!-- Export your packages -->
+                        <Export-Package>com.example.*</Export-Package>
+                        <!-- Declare your native code -->
+                        <Bundle-NativeCode>
+                            libmemory${native.extension};osname=${native.os.name};processor=${native.processor}
+                        </Bundle-NativeCode>
+                        <!-- Include the native libraries in the bundle -->
+                        <Include-Resource>
+                            libmemory${native.extension}=${native.output.dir}/libmemory${native.extension}
+                        </Include-Resource>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Profiles for OS-specific settings -->
+    <profiles>
+        <!-- Profile for Linux -->
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>Linux</name>
+                </os>
+            </activation>
+            <properties>
+                <!-- On Linux, JNI OS-specific headers are in include/linux -->
+                <os.include.dir.name>linux</os.include.dir.name>
+                <!-- Shared library extension for Linux -->
+                <native.extension>.so</native.extension>
+                <!-- Machine spec -->
+                <native.os.name>Linux</native.os.name>
+                <native.processor>x86_64</native.processor>
+            </properties>
+        </profile>
+
+        <!-- Profile for macOS -->
+        <profile>
+            <id>mac</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <!-- On macOS, JNI OS-specific headers are in include/darwin -->
+                <os.include.dir.name>darwin</os.include.dir.name>
+                <!-- Shared library extension for macOS -->
+                <native.extension>.dylib</native.extension>
+                <!-- Machine spec -->
+                <native.os.name>MacOSX</native.os.name>
+                <native.processor>aarch64</native.processor>
+            </properties>
+        </profile>
+    </profiles>
+    
+
+</project>
