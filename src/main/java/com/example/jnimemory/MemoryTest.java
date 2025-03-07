@@ -101,6 +101,9 @@ public class MemoryTest {
         // Print final memory usage
         long finalUsage = MemoryTestNative.getResidentSize();
         System.out.println("All threads finished. Final RSS = " + MemoryUtils.humanReadableBytes(finalUsage));
+
+        JavaPmapInspector.printPMapStats();
+
         System.out.println("Press Enter to free memory and exit.");
         System.in.read(); // Wait for user to press Enter
 
