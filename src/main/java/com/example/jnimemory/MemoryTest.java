@@ -40,7 +40,7 @@ public class MemoryTest {
                 MemoryTestNative.setMemory(address, allocSize, (byte)(i % 255));
                 allocated.add(new NativeAllocation(address, allocSize));
 
-                if (i % 100 == 0) {
+                if (i % 99 == 0) {
                     long usage = MemoryTestNative.getResidentSize();
                     long offHeap = usage - (MemoryUtils.getUsedHeap() + MemoryUtils.getUsedNonHeap());
                     System.out.println("Thread " + id + " iteration " + i + 
@@ -70,9 +70,11 @@ public class MemoryTest {
     public static void main(String[] args) {
 
         // Let’s spawn a few threads that each allocate memory
-        final int threadCount = 4;
-        final int iterations = 1000;  // Each thread will allocate memory 1000 times
-        final long allocationSize = 1024 * 1024; // 1MB each time
+        final int threadCount = 200;
+        final int iterations = 100; // Each thread will allocate memory 100 times
+        final long allocationSize = 32 * 1024; // 32 KB
+        // each thread allocates 3.2 MB. if 20 threads share an arena, that's perfectly
+        // filled.
 
         System.out.println("Starting memory allocation test with " + threadCount + " threads.");
 
