@@ -67,7 +67,7 @@ public class MemoryTest {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         // Let’s spawn a few threads that each allocate memory
         final int threadCount = 200;
@@ -101,6 +101,8 @@ public class MemoryTest {
         // Print final memory usage
         long finalUsage = MemoryTestNative.getResidentSize();
         System.out.println("All threads finished. Final RSS = " + MemoryUtils.humanReadableBytes(finalUsage));
+        System.out.println("Press Enter to free memory and exit.");
+        System.in.read(); // Wait for user to press Enter
 
         // Optionally free memory to see if usage decreases
         // (due to glibc arena behavior, the RSS might not drop immediately or might not drop at all)
